@@ -9,7 +9,7 @@ return [
 	| Soporta:  interactuamovil
 	|
 	*/
-	'provider'  => 'interactuamovil',
+	'provider'  => env('SMS_API_PROVIDER', 'interactuamovil'),
 	
 	/*
 	|--------------------------------------------------------------------------
@@ -19,7 +19,7 @@ return [
 	| Credenciales y URL del api del provider
 	|
 	*/
-	'apikey'    => '',
-	'apisecret' => '',
-	'apiurl'    => 'https://apps.interactuamovil.com/tigocorp/api'
+	'apikey'    => env('SMS_API_KEY', ''),
+	'apisecret' => env('SMS_API_SECRET', ''),
+	'apiurl'    => env('SMS_API_URL', 'https://apps.interactuamovil.com/tigocorp/api')
 ];
