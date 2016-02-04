@@ -54,15 +54,23 @@ class SMS {
       $context                 = stream_context_create($options);
       $data                    = file_get_contents($url,false, $context);
       $json                    = json_decode($data);
+    
+      if (!$json) {
+        $response['codigoerror'] = 2;
+        $response['error']       = $data;
+        return $response;
+      }
+  
       $response['codigoerror'] = (property_exists($json, 'code')?$json->code:0);
       $response['error']       = (property_exists($json, 'error')?$json->error:'');
       $response['data']        = $json;
       return $response;
     }
     catch (Exception $e) {
-      $response['codigoerror'] = 1;
+      $response['codigoerror'] = 3;
       $response['error']       = $e->getMessage();
       return $response;
     }
+    
   }
 }
