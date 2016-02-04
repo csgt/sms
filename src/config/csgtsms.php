@@ -21,5 +21,5 @@ return [
 	*/
 	'apikey'    => env('SMS_API_KEY', ''),
 	'apisecret' => env('SMS_API_SECRET', ''),
-	'apiurl'    => env('SMS_API_URL', 'https://apps.interactuamovil.com/tigocorp/api')
+	'apiurl'    => env('SMS_API_URL', 'https://smscorporativo.tigo.com.gt/api/http/')
 ];

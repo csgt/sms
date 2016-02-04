@@ -5,12 +5,10 @@ use Config, View, Exception;
 
 class SMS {
   private $apiKey;
-  private $apiSecret;
   private $apiUrl;
  
   public function __construct() {
     $this->apiKey    = config("csgtsms.apikey");
-    $this->apiSecret = config("csgtsms.apisecret");
     $this->apiUrl    = config("csgtsms.apiurl");
 
     if ($this->apiUrl[strlen($this->apiUrl)-1] !== '/') {
@@ -21,50 +19,105 @@ class SMS {
   public function enviar($aNumero, $aMensaje) {
     $response = ['codigoerror'=>0, 'error'=>'', 'data'=>[]];
 
-    $body = [
+    
+    $params = http_build_query([
       'msisdn'  => $aNumero,
       'message' => $aMensaje,
-    ];
+      'api_key' => $this->apiKey
+    ]);<?php 
 
-    $body = json_encode($body);
+namespace Csgt\SMS;
+use Config, View, Exception;
 
-    $url    = $this->apiUrl . 'messages/send_to_contact';
+class SMS {
+  private $apiKey;
+  private $apiUrl;
+ 
+  public function __construct() {
+    $this->apiKey    = config("csgtsms.apikey");
+    $this->apiUrl    = config("csgtsms.apiurl");
 
-    $datetime = gmdate("D, d M Y H:i:s T");
-    $authentication = $this->apiKey.$datetime.$body;
-    $hash = hash_hmac("sha1",$authentication, $this->apiSecret,true);
-    $hash = base64_encode($hash);
-    $headers = [
-      "Content-type: application/json",
-      "Date: $datetime",
-      "Authorization: IM $this->apiKey:$hash",
-      "X-IM-ORIGIN: IM_SDK_PHP",
-    ];
-        
-    $options = [
-      'http' => [
-        'header'        => $headers,
-        'method'        => 'POST',
-        'content'       => $body,
-        'ignore_errors' => true,
-      ],
-    ];
+    if ($this->apiUrl[strlen($this->apiUrl)-1] !== '/') {
+      $this->apiUrl .= '/';
+    }
+  }
+
+  public function enviar($aNumero, $aMensaje) {
+    $response = ['codigoerror'=>0, 'error'=>'', 'data'=>[]];
+
+    
+    $params = http_build_query([
+      'msisdn'  => $aNumero,
+      'message' => $aMensaje,
+      'api_key' => $this->apiKey
+    ]);
+    $url    = trim($this->apiUrl . 'send_to_contact?' . $params);
 
     try {
-      $context                 = stream_context_create($options);
-      $data                    = file_get_contents($url,false, $context);
-      $json                    = json_decode($data);
-    
+
+      $ch = curl_init();
+      $timeout = 10;
+      curl_setopt($ch, CURLOPT_URL, $url);
+      curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+      curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, $timeout);
+      $data = curl_exec($ch);
+      curl_close($ch);
+      $json    = json_decode($data);
+
       if (!$json) {
         $response['codigoerror'] = 2;
         $response['error']       = $data;
         return $response;
       }
-  
-      $response['codigoerror'] = (property_exists($json, 'code')?$json->code:0);
-      $response['error']       = (property_exists($json, 'error')?$json->error:'');
-      $response['data']        = $json;
+
+      if ($json->sms_sent==1) {
+        $response['data'] = $data;
+        return $response;
+      }
+      else {
+        $response['codigoerror'] = 1;
+        $response['error']       = 'Error enviando';
+        $response['data']        = $data;
+        return $response;
+      }    
+    }
+    catch (Exception $e) {
+      $response['codigoerror'] = 3;
+      $response['error']       = $e->getMessage();
       return $response;
+    }
+    
+  }
+}
+    $url    = trim($this->apiUrl . 'send_to_contact?' . $params);
+
+    try {
+
+      $ch = curl_init();
+      $timeout = 10;
+      curl_setopt($ch, CURLOPT_URL, $url);
+      curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+      curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, $timeout);
+      $data = curl_exec($ch);
+      curl_close($ch);
+      $json    = json_decode($data);
+
+      if (!$json) {
+        $response['codigoerror'] = 2;
+        $response['error']       = $data;
+        return $response;
+      }
+
+      if ($json->sms_sent==1) {
+        $response['data'] = $data;
+        return $response;
+      }
+      else {
+        $response['codigoerror'] = 1;
+        $response['error']       = 'Error enviando';
+        $response['data']        = $data;
+        return $response;
+      }    
     }
     catch (Exception $e) {
       $response['codigoerror'] = 3;
