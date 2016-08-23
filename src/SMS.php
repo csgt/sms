@@ -44,7 +44,7 @@ class SMS {
         return $response;
       }
 
-      if($json->code) {
+      if(isset($json->code)) {
         $response['codigoerror'] = $json->code;
         $response['error']       = $json->error;
         $response['data']        = $data;
